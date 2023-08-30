@@ -1,0 +1,45 @@
+i will be creating a mern application known as alumni management system of a college
+
+first alumni has to reguster himself or herself in the app
+registration process is or as follows 
+there will be student data previously loaded consisting of name rollno dateofbirth gender phnno emailno degree course coursestartdate courseenddate  passout(yes/no)
+there will be three types of user alumni(passed out student), student(currently pursuing), admin(has all access)
+
+for admin:
+can delete alumni he has to type username then all the data from alumni table will be deleted but not from student table
+can delete student data but not from the main table
+can update alumni and student details
+can add student in main student data table 
+
+for alumni:-
+now in the registration process alumni has to first verify that he was student of that college or not for which he has to fill up a form with details like name gender rollno course courseenddate and passout
+
+if passout status is yes and courseenddate is before current systemdate then only process will move forward and the details entered will be matched with the previosly loaded student data
+if credentials matches then user has to only give username and password and all the other details will be mapped as a refference from the previously student table
+
+after completion of successfull registration they will be redirected to the login page where they have to log in using their username password  profile photo(will be stored first in cloudinary then url will be stored in mongodb) , then working status if then  which organisation and his role,previous company he has worked for, his skills, industrial experience(time)
+
+there will be training section where alumni can post ( training type(private(training section is visible to only admin,alumniand student) and public (anyone authenticated user as well as unaunthenticated user) a person who is authenticated or not will be checked by the authentication token stored in local browser storage after succefull login) topic,details,target audience ,place(remote/location),if remote then meeting link,audience limit(yes/no is yes then how many) date and time ).
+
+there will be two posts section one (only visible to authenticated admin and alumnis) and another (visible to authenticated alumni,admin,student) in this section alumni can post only picture, only text, or pic+text but for pic can upload only one picture.alumni can delete them
+
+there will be chat section where alumni can message to each other (done through socket.io)
+
+there will be another section known as alumni list (publicly visible) which will show all alumni list including limited details like name current organisation working previous organisation 
+but if the user is authenticated that is student alumni and admin can see extra details on clicking on their name they will be redirected to their profile page which will show profile photo  name, course ,stream, course duration that is coursestart date to end date , current organisation working previous organisation. in this alumni list there will be search option also to search for alumnis.
+
+alumni can change their details on their own. and also can delete his or her profile
+
+for student:-
+they need register first to acces as a stuedent they have to verify first before registration as done for alumni verification and they will only allowed if passout status no ,course end date  is after current system date and all other details matched with student data details then they will be moved to student register form consisting of username and password and all other details will be copied from student data details. then they will be redirected to login page .they cant change their details on their own. they can see alumni profile and  can see posts from alumni which is meant for them and also can see training session both public and private
+
+
+there will be navbar 
+1st layer:-
+left of navbar consists of college logo
+middle ALUMNI MANAGEMENT SYSTEM
+right of navbar if authtoken not present in localstorage then Register/login if authtoken present then he is authenticated there will be rounded avatar having the profile picture and on clicking drop down menu it will see profile change details(only for admin) logout deactivateaccount
+
+2nd layer
+
+middle -- training post message alumnilist

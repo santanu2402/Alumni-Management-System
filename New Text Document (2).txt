@@ -1,0 +1,22 @@
+ npm i express cors express-validator nodemon bcryptjs body-parser cloudinary dotenv mongoose jsonwebtoken
+
+npm install express-async-handler
+npm install multer
+
+npm install socket.io http
+
+frontend:
+npm i react-router-dom
+npm i axios
+
+material ui
+npm install @mui/material @emotion/react @emotion/styled
+npm install @mui/material @mui/styled-engine-sc styled-components
+npm install @mui/icons-material
+
+chakra ui
+npm i @chakra-ui/react @emotion/react @emotion/styled framer-motion
+npm i @chakra-ui/icons 
+
+import { Button } from '@chakra-ui/react'; // Import Button from Chakra UI
+import { ChevronDownIcon } from '@chakra-ui/icons'; // Import ChevronDownIcon from Chakra UI icons

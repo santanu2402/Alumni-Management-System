@@ -1,0 +1,137 @@
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
+import cloudinary from 'cloudinary';
+import multer from 'multer';
+import cors from 'cors';
+
+import Alumni from '../mongodb/models/alumni/alumniModel.js'
+import AllStudent from '../mongodb/models/allstudent/allstudentModel.js';
+import fetchuser from '../middleware/fetchUser.js';
+
+
+const router = express.Router();
+router.use(cors());
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Multer for profile photo upload
+const upload = multer({ dest: 'uploads/' }); // Adjust the destination folder as needed
+
+
+
+router.post('/create', [
+    upload.single('profilePhoto'),
+    body('alumniData.username', 'Username cannot be blank').trim().notEmpty(),
+    body('alumniData.password', 'Password must be at least 8 characters long').isLength({ min: 8 }),
+    body('additionalData.workingStatus', 'Working status cannot be blank').trim().notEmpty(),
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { alumniData, additionalData } = req.body;
+
+        // Check if the username is already taken
+        const existingAlumni = await Alumni.findOne({ username: alumniData.username });
+        if (existingAlumni) {
+            return res.status(400).json({ success: false, message: 'Username already exists' });
+        }
+
+        // Find the corresponding student data for the alumni
+        const studentData = await AllStudent.findById(alumniData.student);
+
+        if (!studentData) {
+            return res.status(400).json({ success: false, message: 'Student data not found' });
+        }
+
+        // Upload profile photo to Cloudinary
+        const result = await cloudinary.v2.uploader.upload(req.file.path);
+
+        // Encrypt the password using bcrypt
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(alumniData.password, salt);
+
+        // Create a new alumni based on the alumni model and provided data
+        const newAlumni = new Alumni({
+            username: alumniData.username,
+            password: hashedPassword,
+            profilePhotoUrl: result.secure_url, // Use the secure URL from Cloudinary
+            workingStatus: additionalData.workingStatus,
+            organization: additionalData.organization,
+            role: additionalData.role,
+            previousCompany: additionalData.previousCompany,
+            skills: additionalData.skills,
+            industrialExperience: additionalData.industrialExperience,
+            student: studentData._id // Reference to the student data
+        });
+
+        // Save the new alumni to the database
+        await newAlumni.save();
+
+        res.status(201).json({ success: true, message: 'Alumni created successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+
+router.post('/login', [
+    body('username', 'Enter a valid username').exists(),
+    body('password', 'Password cannot be blank').exists()
+  ], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+  
+    const { username, password } = req.body;
+  
+    try {
+      let alumni = await Alumni.findOne({ username });
+      if (!alumni) {
+        return res.status(400).json({ success: false, error: 'Enter correct login credentials' });
+      }
+  
+      const passwordComp = await bcrypt.compare(password, alumni.password);
+      if (!passwordComp) {
+        return res.status(400).json({ success: false, error: 'Enter correct login details' });
+      }
+  
+      const data = {
+        info: {
+          id: alumni._id
+        }
+      };
+  
+      const authToken = jwt.sign(data, process.env.JWT_SECRET);
+  
+      res.json({ success: true, authToken });
+  
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  router.post('/getuser', fetchuser, async (req, res) => {
+    try {
+      const alumni = await Alumni.findById(req.user.id).select('-password');
+      res.send(alumni);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  
+
+export default router;
